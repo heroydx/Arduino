@@ -1,0 +1,36 @@
+// 对几个文件和功能的说明
+lvApp_sniffing
+lvApp_sniffingGate
+lvApp_sniffingGateTemp
+lvApp_sniffingButton
+lvApp_Tag
+Sniffing6
+
+说明
+1. lvApp_sniffing
+* 1-14频道平均扫描
+* 所有扫到的设备没有dbm阈值
+
+2. lvApp_sniffingGate
+* 1-14频道扫描频率不一致。所属AP工作的频道（home channel) 是其他频道10倍时间
+* 在所属AP设备dbm没有阈值
+* 其他AP的设备有阈值，需要 >-70dbm
+
+3. lvApp_sniffingGateTemp
+* 1-14频道扫描频率不一致。所属AP工作的频道（home channel) 是其他频道10倍时间
+* 在所属AP设备dbm没有阈值
+* 其他AP的设备有阈值，需要 >-70dbm
+* 支持DHT系列温湿度计
+
+4. lvApp_sniffingButton
+* 1-14频道平均扫描
+* 所有扫到的设备没有dbm阈值
+* 支持Tag的特殊标记
+* 支持电池电压测量
+
+5. lvApp_Tag
+* 用作 wifi tag,每1分钟工作15秒
+
+6. Sniffing6
+* 最原始的扫描软件
+
