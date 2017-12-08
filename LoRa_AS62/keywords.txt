@@ -1,0 +1,20 @@
+#######################################
+# Syntax Coloring Map For LoRa_AS62
+#######################################
+
+#######################################
+# Datatypes (KEYWORD1)
+#######################################
+
+LoRa_AS62	KEYWORD1
+
+#######################################
+# Methods and Functions (KEYWORD2)
+#######################################
+
+begin	KEYWORD2
+available	KEYWORD2
+busy	KEYWORD2
+send	KEYWORD2
+get	KEYWORD2
+setConfig	KEYWORD2

@@ -52,6 +52,7 @@ void setup()
   check_sys_data();
   LVDATA.vLED_poweron();
   LVDATA.bKeepConnection = CONST_SYS_KEEP_WIFI_CONNECTION;
+
 }
 
 void loop()
@@ -274,7 +275,7 @@ void EC11_loop()
     unsigned long val;
     val = glCH2_freq_currPosition * CONST_APP_SG_CONFIG_FREQ_STEP;
     DBGPRINTF("\n Position:[%d] freq[%d] val[%d] ", glCH2_freq_currPosition, gsSG.currStat[1].freq, val);
-    gsSG.trans_server_CMD(2, "FREQ", val);
+    gsSG.trans_server_CMD(1, "FREQ", val);
     glCH2_freq_currPosition = 0;
   }
   
