@@ -57,7 +57,7 @@ void setup()
 
 void loop()
 {
-  LVDATA.mainloop();
+  //LVDATA.mainloop();
   vApplication_main_loop_call();
 }
 
@@ -101,30 +101,36 @@ SG_JDS gsSG;
 
 //NEEDTOMODIFY BEGIN
 #include "Button.h"
-Button gsButton;
-#define CONST_APP_SG_SAVE_PARAM_PIN    D0 //GPIO 16
+//Button gsButton;
+//#define CONST_APP_SG_SAVE_PARAM_PIN    D0 //GPIO 16
+
+#define CONST_APP_SG_SAVE_PARAM_PIN    02 //GPIO 02
 
 #include "RotaryEncoder.h"
 RotaryEncoder gsEC11_CH1_AMP;
-#define CONST_APP_SG_CH1_AMP_ENCODER_A_PIN D2
-#define CONST_APP_SG_CH1_AMP_ENCODER_B_PIN D1
+//#define CONST_APP_SG_CH1_AMP_ENCODER_A_PIN D4 //GPIO 2
+//#define CONST_APP_SG_CH1_AMP_ENCODER_B_PIN D8 //GPIO 15
+
+#define CONST_APP_SG_CH1_AMP_ENCODER_A_PIN 14 //GPIO 14
+#define CONST_APP_SG_CH1_AMP_ENCODER_B_PIN 16 //GPIO 16
 long glCH1_amp_currPosition;
 long glCH1_amp_prePosition;
 
 //借用调占空比的引脚控制CH2频率
 RotaryEncoder gsEC11_CH2_FREQ;
-#define CONST_APP_SG_CH2_FREQ_ENCODER_A_PIN D6
-#define CONST_APP_SG_CH2_FREQ_ENCODER_B_PIN D5
+#define CONST_APP_SG_CH2_FREQ_ENCODER_A_PIN D2 //GPIO 04
+#define CONST_APP_SG_CH2_FREQ_ENCODER_B_PIN D1 //GPIO 05
 long glCH2_freq_currPosition;
 long glCH2_freq_prePostion;
 
-/*
+
 RotaryEncoder gsEC11_CH2_DUTY;
 #define CONST_APP_SG_CH2_DUTY_ENCODER_A_PIN D6 //GPIO 12
-#define CONST_APP_SG_CH2_DUTY_ENCODER_B_PIN D5 //GPIO 14
+#define CONST_APP_SG_CH2_DUTY_ENCODER_B_PIN 13 //GPIO 13
 long glCH2_duty_currPosition;
 long glCH2_duty_prePostion;
-*/
+
+long isChangeFlag;
 
 //NEEDTOMODIFY END
 
@@ -228,34 +234,45 @@ void vApplication_connected_loop_call()
 void vApplication_main_loop_call()
 {
   gsSG.loop();
+  
+  if (isChangeFlag > 0) {
+    isChangeFlag = 0;
+    gsSG.bSave_config();
+  }
+
   EC11_loop();
 }
 
 //NEEDTOMODIFY BEGIN
 void EC11_setup()
 {
-  gsButton.begin(CONST_APP_SG_SAVE_PARAM_PIN);
+  DBGPRINTLN("\n EC11_setup()");
+  //gsButton.begin(CONST_APP_SG_SAVE_PARAM_PIN);
 
-  //gsEC11_CH1_AMP.begin(CONST_APP_SG_CH1_AMP_ENCODER_A_PIN, CONST_APP_SG_CH1_AMP_ENCODER_B_PIN);
+  gsEC11_CH1_AMP.begin(CONST_APP_SG_CH1_AMP_ENCODER_A_PIN, CONST_APP_SG_CH1_AMP_ENCODER_B_PIN);
   gsEC11_CH2_FREQ.begin(CONST_APP_SG_CH2_FREQ_ENCODER_A_PIN, CONST_APP_SG_CH2_FREQ_ENCODER_B_PIN);
-  //gsEC11_CH2_DUTY.begin(CONST_APP_SG_CH2_DUTY_ENCODER_A_PIN, CONST_APP_SG_CH2_DUTY_ENCODER_B_PIN);
+  gsEC11_CH2_DUTY.begin(CONST_APP_SG_CH2_DUTY_ENCODER_A_PIN, CONST_APP_SG_CH2_DUTY_ENCODER_B_PIN);
 
-  //pinMode(CONST_APP_SG_CH1_AMP_ENCODER_A_PIN, INPUT);
-  //pinMode(CONST_APP_SG_CH1_AMP_ENCODER_B_PIN, INPUT);
-
-  //attachInterrupt(CONST_APP_SG_CH1_AMP_ENCODER_A_PIN, EC11_CH1_interrupt, CHANGE);
+  //以下三行取消注释后导致幅度不可调，转旋钮数值有变化，但是一瞬间归零。
+  //  pinMode(CONST_APP_SG_CH1_AMP_ENCODER_A_PIN, INPUT);
+  //  pinMode(CONST_APP_SG_CH1_AMP_ENCODER_B_PIN, INPUT);
+  //
+  //  attachInterrupt(CONST_APP_SG_CH1_AMP_ENCODER_A_PIN, EC11_CH1_interrupt, CHANGE);
 }
 
 void EC11_loop()
 {
   int theStat;
-  theStat = gsButton.read();
-  if (theStat) {
+  //DBGPRINTLN("\n EC11_loop()");
+  /*
+    theStat = gsButton.read();
+    if (theStat) {
     DBGPRINTF("\nSwitch Pressed:[%d] and will save data", theStat);
     gsSG.bSave_config();
-  }
+    }
+  */
   //DBGPRINTF("\n glCH1_amp_currPosition += gsEC11_CH1_AMP.read() [%d]",glCH1_amp_currPosition);
-  /*
+
   // AMP Part
   glCH1_amp_currPosition += gsEC11_CH1_AMP.read();
   if (glCH1_amp_currPosition != 0) {
@@ -264,11 +281,11 @@ void EC11_loop()
     DBGPRINTF("\n Position:[%d] amp[%d] val[%d] ", glCH1_amp_currPosition, gsSG.currStat[0].amp, val);
     gsSG.trans_server_CMD(1, "AMP", val);
     glCH1_amp_currPosition = 0;
+    isChangeFlag++;
   }
-  */
 
-  
-  
+
+
   // FREQ Part
   glCH2_freq_currPosition += gsEC11_CH2_FREQ.read();
   if (glCH2_freq_currPosition != 0) {
@@ -277,10 +294,11 @@ void EC11_loop()
     DBGPRINTF("\n Position:[%d] freq[%d] val[%d] ", glCH2_freq_currPosition, gsSG.currStat[1].freq, val);
     gsSG.trans_server_CMD(1, "FREQ", val);
     glCH2_freq_currPosition = 0;
+    isChangeFlag++;
   }
-  
 
-  /*
+
+
   // DUTY Part
   glCH2_duty_currPosition += gsEC11_CH2_DUTY.read(); //先读取，再加，再扔回！
   if (glCH2_duty_currPosition != 0) {
@@ -289,8 +307,9 @@ void EC11_loop()
     DBGPRINTF("\n Position:[%d] duty[%d] val[%d] ", glCH2_duty_currPosition, gsSG.currStat[1].duty, val);
     gsSG.trans_server_CMD(2, "DUTY", val);
     glCH2_duty_currPosition = 0;
+    isChangeFlag++;
   }
-  */
+
 }
 
 void EC11_CH1_interrupt() {
