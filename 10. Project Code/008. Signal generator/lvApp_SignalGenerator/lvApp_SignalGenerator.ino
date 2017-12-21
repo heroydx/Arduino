@@ -111,6 +111,8 @@ RotaryEncoder gsEC11_CH1_AMP;
 //#define CONST_APP_SG_CH1_AMP_ENCODER_A_PIN D4 //GPIO 2
 //#define CONST_APP_SG_CH1_AMP_ENCODER_B_PIN D8 //GPIO 15
 
+
+
 #define CONST_APP_SG_CH1_AMP_ENCODER_A_PIN 14 //GPIO 14
 #define CONST_APP_SG_CH1_AMP_ENCODER_B_PIN 16 //GPIO 16
 long glCH1_amp_currPosition;
@@ -131,6 +133,11 @@ long glCH2_duty_currPosition;
 long glCH2_duty_prePostion;
 
 long isChangeFlag;
+
+#define CONST_APP_SG_SAVING_TIME_TICK 1000
+unsigned long glSavingTick;
+
+
 
 //NEEDTOMODIFY END
 
@@ -234,12 +241,81 @@ void vApplication_connected_loop_call()
 void vApplication_main_loop_call()
 {
   gsSG.loop();
-  
-  if (isChangeFlag > 0) {
-    isChangeFlag = 0;
-    gsSG.bSave_config();
-  }
+  if ((ulGet_interval(glSavingTick) > CONST_APP_SG_SAVING_TIME_TICK))
+  {
+    short nTflag = 0;
+    DBGPRINTLN("\n CONST_APP_SG_SAVING_TIME_TICK out");
+    if (1) {
+      long p1;
+      DBGPRINTLN("\n CONST_APP_SG_SAVING_TIME_TICK in");
 
+      //判断幅度是否超出范围
+      //nTflag = 0;
+      p1 = gsSG.currStat[CONST_APP_SG_CH1_NUM - 1].amp;
+      if (p1 > CONST_APP_SG_CONFIG_AMP_MAX) {
+        p1 = CONST_APP_SG_CONFIG_AMP_MAX;
+        nTflag = 1;
+      }
+      if (p1 < CONST_APP_SG_CONFIG_AMP_MIN) {
+        p1 = CONST_APP_SG_CONFIG_AMP_MIN;
+        nTflag = 1;
+      }
+      if (nTflag) {
+        gsSG.prepare_cmd_param((char *)gsSG.au8sendBuff, CONST_APP_SG_CMD_TYPE_STAND_WRITE, CONST_APP_SG_FMT_AMP_CH1, p1);
+        DBGPRINTF("\n%s", gsSG.au8sendBuff);
+        gsSG.send_CMD_to_device((char *)gsSG.au8sendBuff);
+        //gsSG.bSave_config();
+        delay(1);
+      }
+      //判断频率是否超出范围
+      //nTflag = 0;
+      p1 = gsSG.currStat[CONST_APP_SG_CH1_NUM - 1].freq;
+      if (p1 > CONST_APP_SG_CONFIG_FREQ_MAX) {
+        p1 = CONST_APP_SG_CONFIG_FREQ_MAX;
+        nTflag = 1;
+      }
+      if (p1 < CONST_APP_SG_CONFIG_FREQ_MIN) {
+        p1 = CONST_APP_SG_CONFIG_FREQ_MIN;
+        nTflag = 1;
+      }
+      if (nTflag) {
+        gsSG.prepare_cmd_param((char *)gsSG.au8sendBuff, CONST_APP_SG_CMD_TYPE_STAND_WRITE, CONST_APP_SG_FMT_FREQ_CH1, p1);
+        DBGPRINTF("\n%s", gsSG.au8sendBuff);
+        gsSG.send_CMD_to_device((char *)gsSG.au8sendBuff);
+        //gsSG.bSave_config();
+        delay(1);
+      }
+
+      //判断占空比是否超出范围
+      //nTflag = 0;
+      p1 = gsSG.currStat[CONST_APP_SG_CH2_NUM - 1].duty;
+      if (p1 > CONST_APP_SG_CONFIG_DUTY_MAX) {
+        p1 = CONST_APP_SG_CONFIG_DUTY_MAX;
+        nTflag = 1;
+      }
+      if (p1 < CONST_APP_SG_CONFIG_DUTY_MIN) {
+        p1 = CONST_APP_SG_CONFIG_DUTY_MIN;
+        nTflag = 1;
+      }
+      if (nTflag) {
+        gsSG.prepare_cmd_param((char *)gsSG.au8sendBuff, CONST_APP_SG_CMD_TYPE_STAND_WRITE, CONST_APP_SG_FMT_DUTY_CH2, p1);
+        DBGPRINTF("\n%s", gsSG.au8sendBuff);
+        gsSG.send_CMD_to_device((char *)gsSG.au8sendBuff);
+        //gsSG.bSave_config();
+        delay(1);
+      }
+      if (isChangeFlag > 0 || gsSG.bStatChangeFlag) {
+        isChangeFlag = 0;
+        gsSG.bSave_config();
+      }
+      //      if (isChangeFlag > 0) {
+      //        isChangeFlag = 0;
+      //        gsSG.bSave_config();
+      //      }
+    }
+    glSavingTick = ulReset_interval();
+
+  }
   EC11_loop();
 }
 
@@ -253,7 +329,7 @@ void EC11_setup()
   gsEC11_CH2_FREQ.begin(CONST_APP_SG_CH2_FREQ_ENCODER_A_PIN, CONST_APP_SG_CH2_FREQ_ENCODER_B_PIN);
   gsEC11_CH2_DUTY.begin(CONST_APP_SG_CH2_DUTY_ENCODER_A_PIN, CONST_APP_SG_CH2_DUTY_ENCODER_B_PIN);
 
-  //以下三行取消注释后导致幅度不可调，转旋钮数值有变化，但是一瞬间归零。
+  //
   //  pinMode(CONST_APP_SG_CH1_AMP_ENCODER_A_PIN, INPUT);
   //  pinMode(CONST_APP_SG_CH1_AMP_ENCODER_B_PIN, INPUT);
   //
